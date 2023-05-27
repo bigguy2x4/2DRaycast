@@ -23,7 +23,7 @@ public:
 	float getFOV();
 	
 	void draw();
-	void castRays1(int numRays, int** map, int tilesize, int sizeX, int sizeY, int screenwidth, int screenheight);
-	void castRays2(int numRays, int** map, int tilesize, int sizeX, int sizeY, int screenwidth, int screenheight);
-	void castRays3(int numRays, int** map, int tilesize, int sizeX, int sizeY, int screenwidth, int screenheight);
+	void castRaysOld(int numRays, int** map, int tilesize, int sizeX, int sizeY, int screenwidth, int screenheight);
+	void castRays(int numRays, int** map, int tilesize, int sizeX, int sizeY, int screenwidth, int screenheight);
+	bool checkCollision(int** map, int tilesize);
 };

@@ -50,7 +50,7 @@ void Player::draw() {
 
 }
 
-void Player::castRays1(int numRays, int** map, int tilesize, int sizeX, int sizeY, int screenwidth, int screenheight) {
+void Player::castRaysOld(int numRays, int** map, int tilesize, int sizeX, int sizeY, int screenwidth, int screenheight) {
 	//initial position and interval distance between rays
 	float stepTheta = (float) fov / (numRays-1);
 	float rayDirX = (dirX * cos(fov / 2.0)) - (dirY * sin(fov / 2.0));
@@ -133,125 +133,8 @@ void Player::castRays1(int numRays, int** map, int tilesize, int sizeX, int size
 	}
 }
 
-void Player::castRays2(int numRays, int** map, int tilesize, int sizeX, int sizeY, int screenwidth, int screenheight) {
-	//initial position and interval distance between rays
-	float stepTheta = (float)fov / (numRays - 1);
-	float rayDirX = (dirX * cos(fov / 2.0)) - (dirY * sin(fov / 2.0));
-	float rayDirY = (dirX * sin(fov / 2.0)) + (dirY * cos(fov / 2.0));
-	float angleToH = atan(rayDirY / rayDirX);
-	
-	//final distance
-	float distanceA = 0, distanceB = 0, distancef = 0;
 
-	for (int i = 0; i < numRays; i++) {
-
-
-		//first Horizontal line intersect point
-		//going up
-		float Ax = 0, Ay = 0;
-		if (rayDirY < 0) {Ay = floor(py / tilesize) * tilesize - 0.01;}
-		if (rayDirY > 0) { Ay = (floor(py / tilesize) * tilesize) + tilesize; }
-		Ax = px + copysignf((Ay - py) / tan(angleToH), rayDirX);
-		bool intersectA = false;
-
-		float Bx = 0, By = 0;
-		if (rayDirX < 0) { Bx = floor(px / tilesize) * tilesize - 0.01; }
-		if (rayDirX > 0) { Bx = floor(px / tilesize) * tilesize + tilesize; }
-		By = py + copysignf((Bx - px) * tan(angleToH), rayDirY);
-		bool intersectB = false;
-
-		for (int i = 0; i < max(sizeX,sizeY); i++) {
-			int xInd = (int)floor(Ax / tilesize);
-			int yInd = (int)floor(Ay / tilesize);
-
-			if (xInd < 0) { xInd = 0; }
-			if (xInd > sizeX - 1) { xInd = sizeX - 1; }
-			if (yInd < 0) { yInd = 0; }
-			if (yInd > sizeY - 1) { yInd = sizeY - 1; }
-
-			if (map[yInd][xInd] == 1) {
-				intersectA = true;
-				distanceA = abs(sqrt(pow(Ax - px, 2) + pow(Ay - py, 2)));
-			}
-
-			if (!intersectA) {
-				Ay = Ay + copysignf(tilesize, rayDirY);
-				Ax = Ax + copysignf((tilesize / tan(angleToH)), rayDirX);
-			}
-
-			xInd = (int)floor(Bx / tilesize);
-			yInd = (int)floor(By / tilesize);
-
-			if (xInd < 0) { xInd = 0; }
-			if (xInd > sizeX - 1) { xInd = sizeX - 1; }
-			if (yInd < 0) { yInd = 0; }
-			if (yInd > sizeY - 1) { yInd = sizeY - 1; }
-
-			if (map[yInd][xInd] == 1) {
-				intersectB = true;
-				distanceB = abs(sqrt(pow(Bx - px, 2) + pow(By - py, 2)));
-			}if (!intersectB) {
-				Bx = Bx + copysignf(tilesize, rayDirX);
-				By = By + copysignf(tilesize * tan(angleToH), rayDirY);
-
-			}
-
-
-		}
-		
-	
-	
-
-
-		if (intersectA || intersectB) {
-			if (intersectA && intersectB) {
-				if (distanceA < distanceB) {
-					distancef = distanceA;
-				}
-				else {
-					distancef = distanceB;
-				}
-			}
-			if (intersectA && !intersectB) {
-				distancef = distanceA;
-			}
-			if (intersectB & !intersectA) {
-				distancef = distanceB;
-			}
-			
-			float cosAngleToDir = ((rayDirX * dirX) + (rayDirY * dirY)) / ((sqrt(pow(rayDirX, 2) + pow(rayDirY, 2)) * sqrt(pow(dirX, 2) + pow(dirY, 2))));
-			distancef = abs(distancef * cosAngleToDir);
-
-			float rectWdith = screenwidth / (numRays - 1);
-			float rectHeight = (tilesize * 512) / distancef; if (rectHeight > screenheight) { rectHeight = screenheight; }
-			float yMargin = (screenheight - rectHeight) / 2;
-
-			glBegin(GL_QUADS);
-			glVertex2i(i * rectWdith, yMargin);
-			glVertex2i((i * rectWdith) + rectWdith, yMargin);
-			glVertex2i((i * rectWdith) + rectWdith, screenheight - yMargin);
-			glVertex2i(i * rectWdith, screenheight - yMargin);
-			glEnd();
-
-		}
-		
-	
-		
-		//setting up next ray
-		float rX = rayDirX; float rY = rayDirY;
-		rayDirX = (rX * cos(-stepTheta)) - (rY * sin(-stepTheta));
-		rayDirY = (rX * sin(-stepTheta)) + (rY * cos(-stepTheta));
-		angleToH = atan(rayDirY / rayDirX);
-	}
-
-
-	
-
-}
-
-
-
-void Player::castRays3(int numRays, int** map, int tilesize, int sizeX, int sizeY, int screenwidth, int screenheight) {
+void Player::castRays(int numRays, int** map, int tilesize, int sizeX, int sizeY, int screenwidth, int screenheight) {
 	// Initial position and interval distance between rays
 	float stepTheta = static_cast<float>(fov) / (numRays - 1);
 	float rayDirX = (dirX * cos(fov / 2.0)) - (dirY * sin(fov / 2.0));
@@ -349,7 +232,7 @@ void Player::castRays3(int numRays, int** map, int tilesize, int sizeX, int size
 			if (intersectA && !intersectB) {
 				distancef = distanceA;
 			}
-			if (intersectB & !intersectA) {
+			if (intersectB && !intersectA) {
 				distancef = distanceB;
 			}
 
@@ -380,6 +263,19 @@ void Player::castRays3(int numRays, int** map, int tilesize, int sizeX, int size
 		angleToH = atan(rayDirY / rayDirX);
 	}
 
+}
+
+bool Player::checkCollision(int** map, int tilesize) {
+	float fx = (px + (dirX* 2));
+	float fy = (py + (dirY * 2));
+
+	int xIndex = (int)floor(fx / tilesize);
+	int yIndex = (int)floor(fy / tilesize);
+
+	if (map[yIndex][xIndex] == 1) {
+		return true;
+	}
+	return false;
 }
 
 

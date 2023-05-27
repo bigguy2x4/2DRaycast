@@ -42,9 +42,7 @@ void drawMap() {
 void display()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    //drawMap();
-   // player.draw();
-    player.castRays3(512, map.getMap(), map.getTileSize(), map.getSizeX(), map.getSizeY(), SCREENWIDTH, SCREENHEIGHT);
+    player.castRays(512, map.getMap(), map.getTileSize(), map.getSizeX(), map.getSizeY(), SCREENWIDTH, SCREENHEIGHT);
     glutSwapBuffers();
  
     
@@ -52,7 +50,7 @@ void display()
 }
 
 void buttons(unsigned char key, int x, int y) {
-    if (key == 'w') { 
+    if (key == 'w' && !player.checkCollision(map.getMap(), map.getTileSize())) {
         float xNew = player.getX() + (2*player.getDirX());
         float yNew = player.getY() + (2*player.getDirY());
         player.setX(xNew); player.setY(yNew);
