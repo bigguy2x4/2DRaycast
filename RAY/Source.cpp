@@ -10,7 +10,7 @@ Player player(75, 75, 1.0);
 Map map(16, 8, 64);
 int SCREENWIDTH = map.getSizeX() * map.getTileSize();
 int SCREENHEIGHT = map.getSizeY() * map.getTileSize();
-
+//function for drawing the game map on a 2d plane 
 void drawMap() {
    
     int x, y, xi, yi;
@@ -38,17 +38,18 @@ void drawMap() {
 }
 
 
-// Display
+//draws rectangles to screen by calling castRays
+
 void display()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
     player.castRays(512, map.getMap(), map.getTileSize(), map.getSizeX(), map.getSizeY(), SCREENWIDTH, SCREENHEIGHT);
     glutSwapBuffers();
  
-    
 
 }
-
+//user input, checks for player collision. NEEDS BACKWARD COLLISION!!
 void buttons(unsigned char key, int x, int y) {
     if (key == 'w' && !player.checkCollision(map.getMap(), map.getTileSize())) {
         float xNew = player.getX() + (2*player.getDirX());

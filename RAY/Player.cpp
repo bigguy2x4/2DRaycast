@@ -50,90 +50,8 @@ void Player::draw() {
 
 }
 
-void Player::castRaysOld(int numRays, int** map, int tilesize, int sizeX, int sizeY, int screenwidth, int screenheight) {
-	//initial position and interval distance between rays
-	float stepTheta = (float) fov / (numRays-1);
-	float rayDirX = (dirX * cos(fov / 2.0)) - (dirY * sin(fov / 2.0));
-	float rayDirY = (dirX * sin(fov / 2.0)) + (dirY * cos(fov / 2.0));
-	float fx = 0, fy = 0;
-	float distance = 0;
-	
-	for (int i = 0; i < numRays; i++) {
-		bool intersect = false;
-		
-		for (int a = 0; a < screenwidth; a++){
-			fx = px + (a * rayDirX);
-			fy = py + (a * rayDirY);
 
-			int xInd = (int)floor(fx / tilesize);
-			int yInd = (int)floor(fy / tilesize);
-
-			if (xInd < 0) { xInd = 0; }
-			if (xInd > sizeX - 1) { xInd = sizeX - 1; }
-			if (yInd < 0) { yInd = 0; }
-			if (yInd > sizeY - 1) { yInd = sizeY - 1; }
-
-			if (map[yInd][xInd] == 1) {
-				intersect = true;
-				
-				float cosAngleToDir = ((rayDirX * dirX) + (rayDirY * dirY)) / ((sqrt(pow(rayDirX, 2) + pow(rayDirY, 2)) * sqrt(pow(dirX, 2) + pow(dirY, 2))));
-				
-				distance = abs(sqrt(pow(fx - px, 2) + pow(fy - py, 2)) * cosAngleToDir);
-			
-				std::cout << "ray" << i << "intersected with: " << xInd << "," << yInd << "\n";
-				std::cout << "ray" << i << "distance: " << distance << "\n";
-				
-				break;
-			}
-		}
-
-		
-		glLineWidth(1);
-		glBegin(GL_LINES);
-		glVertex2i(px, py);
-		
-		
-
-		if (intersect) {
-			glVertex2i(fx, fy);
-
-			/*
-			float rectWdith = screenwidth / (numRays - 1); 
-			float rectHeight = (tilesize * 512) / distance; if (rectHeight > screenheight) { rectHeight = screenheight; }
-			float yMargin = (screenheight - rectHeight) / 2;
-
-			glBegin(GL_QUADS);
-			glVertex2i(i * rectWdith, yMargin);
-			glVertex2i((i*rectWdith) + rectWdith, yMargin);
-			glVertex2i((i * rectWdith) + rectWdith, screenheight - yMargin);
-			glVertex2i(i * rectWdith, screenheight - yMargin);
-			glEnd();
-			*/
-
-
-		}
-		
-		
-		//else{
-			//glVertex2i(px + (rayDirX *500), py + (rayDirY*500));
-		//}
-
-		glEnd();
-		
-
-		
-		
-		//setting up next ray
-		float rX = rayDirX; float rY = rayDirY;
-		rayDirX = (rX * cos(-stepTheta)) - (rY * sin(-stepTheta));
-		rayDirY = (rX * sin(-stepTheta)) + (rY * cos(-stepTheta));
-
-
-
-	}
-}
-
-
+//need to move this method out of player class!! totally unnecessary to have this many arguments
 void Player::castRays(int numRays, int** map, int tilesize, int sizeX, int sizeY, int screenwidth, int screenheight) {
 	// Initial position and interval distance between rays
 	float stepTheta = static_cast<float>(fov) / (numRays - 1);
@@ -145,18 +63,20 @@ void Player::castRays(int numRays, int** map, int tilesize, int sizeX, int sizeY
 	float distanceA = 0, distanceB = 0, distancef = 0;
 
 	for (int i = 0; i < numRays; i++) {
-		// First horizontal line intersect point (going up)
 		float Ax = 0, Ay = 0;
+		//if the y compoment of the ray is 'pointing up' on the screen, finds the distance the player position is from the tile above
 		if (rayDirY < 0) {
 			Ay = floor(py / tilesize) * tilesize - 0.01;
 		}
+		//similarily checks the y distance from player position to the tile underneat
 		if (rayDirY > 0) {
 			Ay = (floor(py / tilesize) * tilesize) + tilesize;
 		}
+		//calculates the x component of the line relative to the determined y component
 		Ax = px + copysignf((Ay - py) / tan(angleToH), rayDirX);
 		bool intersectA = false;
 
-		// First vertical line intersect point
+		//does the same, but this time we find the x distance to the nearest tile left and right, and then calculate the Y relative to the X travelled
 		float Bx = 0, By = 0;
 		if (rayDirX < 0) {
 			Bx = floor(px / tilesize) * tilesize - 0.01;
@@ -167,10 +87,13 @@ void Player::castRays(int numRays, int** map, int tilesize, int sizeX, int sizeY
 		By = py + copysignf((Bx - px) * tan(angleToH), rayDirY);
 		bool intersectB = false;
 
+		//at most we must travel a number of tiles equal to the larger dimension
 		for (int j = 0; j < std::max(sizeX, sizeY); j++) {
+			//we check what tile the point we calculated on the ray belongs to
 			int xInd = static_cast<int>(floor(Ax / tilesize));
 			int yInd = static_cast<int>(floor(Ay / tilesize));
 
+			//handling for out of bounds
 			if (xInd < 0) {
 				xInd = 0;
 			}
@@ -183,17 +106,17 @@ void Player::castRays(int numRays, int** map, int tilesize, int sizeX, int sizeY
 			if (yInd > sizeY - 1) {
 				yInd = sizeY - 1;
 			}
-
+			//if the point on the ray belongs to a tile with a '1' value in the map then a collision has been found 
 			if (map[yInd][xInd] == 1) {
 				intersectA = true;
 				distanceA = std::abs(sqrt(pow(Ax - px, 2) + pow(Ay - py, 2)));
 			}
-
+			//if no itersection we travel a whole tilesize on the y and compute the x component relative to
 			if (!intersectA) {
 				Ay = Ay + copysignf(tilesize, rayDirY);
 				Ax = Ax + copysignf((tilesize / tan(angleToH)), rayDirX);
 			}
-
+			//we do the same for the version iterating horizontally
 			xInd = static_cast<int>(floor(Bx / tilesize));
 			yInd = static_cast<int>(floor(By / tilesize));
 
@@ -219,7 +142,7 @@ void Player::castRays(int numRays, int** map, int tilesize, int sizeX, int sizeY
 				By = By + copysignf(tilesize * tan(angleToH), rayDirY);
 			}
 		}
-
+		//if an intersection is found either iterating horizontally or vertically we take the one with the shorter distance
 		if (intersectA || intersectB) {
 			if (intersectA && intersectB) {
 				if (distanceA < distanceB) {
@@ -235,18 +158,19 @@ void Player::castRays(int numRays, int** map, int tilesize, int sizeX, int sizeY
 			if (intersectB && !intersectA) {
 				distancef = distanceB;
 			}
-
+			//for 'fish eye' compensation, calculating the angle between the ray and the direction vector
 			float cosAngleToDir = ((rayDirX * dirX) + (rayDirY * dirY)) /
 				((sqrt(pow(rayDirX, 2) + pow(rayDirY, 2)) * sqrt(pow(dirX, 2) + pow(dirY, 2))));
 			distancef = std::abs(distancef * cosAngleToDir);
 
+			//setting width and heigh of each rectangle, and sets their height proportional to distance
 			float rectWdith = screenwidth / (numRays - 1);
 			float rectHeight = (tilesize * 512) / distancef;
 			if (rectHeight > screenheight) {
 				rectHeight = screenheight;
 			}
 			float yMargin = (screenheight - rectHeight) / 2;
-
+			//drawing the rectangle
 			glBegin(GL_QUADS);
 			glVertex2i(i * rectWdith, yMargin);
 			glVertex2i((i * rectWdith) + rectWdith, yMargin);

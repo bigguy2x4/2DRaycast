@@ -5,7 +5,7 @@ Map::Map(int x, int y, int size) {
 	generateMap(x, y, size);
 }
 Map::~Map() {}
-//not sure if this works!!
+//generating the map array, needs changes!
 void Map::generateMap(int x, int y, int size) {
 	this->xDim = x;
 	this->yDim = y;
@@ -42,14 +42,14 @@ void Map::generateMap(int x, int y, int size) {
 
 
 }
-//!!
+//if generating a new map deletes the pre existing map first
 void Map::cleanMap() {
 	for (int i = 0; i < yDim; ++i) {
 		delete[] map[i];
 	}
 	delete[] map;
 }
-//unsure
+
 int** Map::getMap() {
 	return map;
 }
